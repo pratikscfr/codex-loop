@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>codex-loop - check a repo, teach your coding agents</title>
+  <meta name="description" content="Check any public GitHub repository against engineering standards, generate AGENTS.md for coding agents, and see how much work agents are doing.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233b5bdb'/%3E%3Cpath d='M16 7a9 9 0 1 0 9 9h-3a6 6 0 1 1-6-6v3l6-5-6-5z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <p class="brand"><span class="logo" aria-hidden="true"></span>codex-loop</p>
+      <p class="tagline">Write an engineering standard once. Enforce it in CI, teach it to coding agents, and see how it is doing.</p>
+    </div>
+  </header>
+
+  <main id="main" class="wrap" tabindex="-1">
+    <section class="card analyze" aria-labelledby="h-analyze">
+      <h1 id="h-analyze">Check a public GitHub repository</h1>
+      <form id="analyze-form" novalidate>
+        <label for="repo-input">Repository <span class="muted">(owner/name or a github.com URL)</span></label>
+        <div class="input-row">
+          <input id="repo-input" name="repo" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="300" placeholder="cloudflare/agents-starter" aria-describedby="repo-hint repo-error" required>
+          <button id="analyze-btn" type="submit" class="primary">Analyze</button>
+        </div>
+        <p id="repo-hint" class="hint">Public repositories only. codex-loop reads files through the GitHub API and never writes to your repository.</p>
+        <p id="repo-error" class="field-error" role="alert" hidden></p>
+        <div class="chips" role="group" aria-label="Example repositories">
+          <span class="chips-label">Try:</span>
+          <button type="button" class="chip" data-repo="cloudflare/agents-starter">cloudflare/agents-starter</button>
+          <button type="button" class="chip" data-repo="honojs/hono">honojs/hono</button>
+          <button type="button" class="chip" data-repo="sindresorhus/is">sindresorhus/is</button>
+        </div>
+      </form>
+
+      <div id="progress" class="progress" role="status" aria-live="polite" hidden>
+        <div class="bar" aria-hidden="true"><span></span></div>
+        <p id="progress-text"></p>
+      </div>
+      <div id="notice" class="notice" role="alert" hidden>
+        <p id="notice-text"></p>
+        <button type="button" id="notice-retry" class="link-button" hidden>Try again</button>
+      </div>
+    </section>
+
+    <section id="results" class="results" aria-label="Analysis results" hidden>
+      <header class="card repo-head" id="repo-head" aria-live="polite"></header>
+
+      <div id="summary" class="summary" aria-label="Summary"></div>
+
+      <div class="tabs" role="tablist" aria-label="Report sections">
+        <button role="tab" id="tab-results" aria-controls="panel-results" aria-selected="true" tabindex="0">Results</button>
+        <button role="tab" id="tab-context" aria-controls="panel-context" aria-selected="false" tabindex="-1">Agent context</button>
+        <button role="tab" id="tab-ci" aria-controls="panel-ci" aria-selected="false" tabindex="-1">Add to CI</button>
+        <button role="tab" id="tab-chat" aria-controls="panel-chat" aria-selected="false" tabindex="-1">Ask about this repo</button>
+      </div>
+
+      <div role="tabpanel" id="panel-results" aria-labelledby="tab-results" tabindex="0">
+        <section id="advisory" class="card advisory" aria-labelledby="h-advisory" hidden></section>
+
+        <section class="card" aria-labelledby="h-controls">
+          <div class="section-head">
+            <h2 id="h-controls">Controls</h2>
+            <div class="filters" role="group" aria-label="Filter controls">
+              <button type="button" class="filter" data-filter="all" aria-pressed="true">All</button>
+              <button type="button" class="filter" data-filter="fail" aria-pressed="false">Failing</button>
+              <button type="button" class="filter" data-filter="unknown" aria-pressed="false">Unknown</button>
+              <button type="button" class="filter" data-filter="pass" aria-pressed="false">Passing</button>
+            </div>
+          </div>
+          <div id="controls"></div>
+        </section>
+
+        <section id="footprint" class="card" aria-labelledby="h-footprint"></section>
+        <section id="trend" class="card" aria-labelledby="h-trend" hidden></section>
+      </div>
+
+      <div role="tabpanel" id="panel-context" aria-labelledby="tab-context" tabindex="0" hidden>
+        <section class="card" aria-labelledby="h-context">
+          <div class="section-head">
+            <h2 id="h-context">Agent context (AGENTS.md)</h2>
+            <div class="actions">
+              <button type="button" id="copy-agents" class="secondary">Copy</button>
+              <button type="button" id="download-agents" class="secondary">Download</button>
+            </div>
+          </div>
+          <p class="hint">Generated from this repository's failing controls. Commit it as <code>AGENTS.md</code> so coding agents follow the same rules CI enforces.</p>
+          <p id="agents-status" class="sr-note" role="status" aria-live="polite"></p>
+          <pre class="code" id="agents-md" tabindex="0" aria-label="Generated AGENTS.md"><code>Loading...</code></pre>
+        </section>
+      </div>
+
+      <div role="tabpanel" id="panel-ci" aria-labelledby="tab-ci" tabindex="0" hidden>
+        <section class="card" aria-labelledby="h-ci">
+          <div class="section-head">
+            <h2 id="h-ci">Run it in CI</h2>
+            <div class="actions"><button type="button" id="copy-ci" class="secondary">Copy</button></div>
+          </div>
+          <p class="hint edit-note"><strong>Edit before use:</strong> <code>&lt;full-commit-sha&gt;</code> is a placeholder and the workflow fails until you replace it with a full 40-character commit SHA of <code>pratikscfr/codex-loop</code>. The action lives in that repository's <code>action/</code> subdirectory.</p>
+          <p id="ci-status" class="sr-note" role="status" aria-live="polite"></p>
+          <pre class="code" id="ci-yaml" tabindex="0" aria-label="GitHub Actions workflow"><code></code></pre>
+          <div class="section-head sub">
+            <h3>Optional: rollout config</h3>
+            <div class="actions"><button type="button" id="copy-ci-config" class="secondary">Copy</button></div>
+          </div>
+          <pre class="code" id="ci-config" tabindex="0" aria-label="codex-loop configuration"><code></code></pre>
+          <p class="hint">Start in <code>audit</code> mode so nothing blocks, then promote controls to <code>warn</code> and <code>enforce</code> as the team is ready.</p>
+        </section>
+      </div>
+
+      <div role="tabpanel" id="panel-chat" aria-labelledby="tab-chat" tabindex="0" hidden>
+        <section class="card chat" aria-labelledby="h-chat">
+          <h2 id="h-chat">Ask about this repo</h2>
+          <p class="hint">Answers are grounded in this report through tools. Deterministic findings are labelled <em>verified</em>; anything else is a <em>suggestion</em>. The AI can be wrong, so check important details against the report.</p>
+          <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Conversation"></div>
+          <form id="chat-form" novalidate>
+            <label for="chat-input" class="sr-only">Your question</label>
+            <textarea id="chat-input" rows="2" maxlength="2000" placeholder="Which failures should I fix first?" required></textarea>
+            <div class="chat-actions">
+              <span id="chat-count" class="muted" aria-hidden="true"></span>
+              <button type="submit" id="chat-send" class="primary">Send</button>
+            </div>
+          </form>
+          <p id="chat-error" class="field-error" role="alert" hidden></p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>codex-loop analyzes public GitHub data read-only. Findings are deterministic; AI output is always labelled and citation-checked. Public MCP endpoint: <code>/mcp</code>.</p>
+    </div>
+  </footer>
+
+  <noscript><p class="wrap notice">This page needs JavaScript to run an analysis.</p></noscript>
+</body>
+</html>

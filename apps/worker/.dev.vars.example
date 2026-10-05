@@ -1,0 +1,5 @@
+# Copy to .dev.vars for local `wrangler dev`. Everything here is OPTIONAL.
+# GITHUB_TOKEN raises GitHub's API limit from 60/hour (per IP) to 5000/hour.
+# Use a fine-grained token with no permissions beyond "public repositories (read-only)".
+# For production run: npx wrangler secret put GITHUB_TOKEN
+GITHUB_TOKEN=

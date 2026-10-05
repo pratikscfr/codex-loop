@@ -1,0 +1,8 @@
+# codex-loop checks itself. Modes roll out audit -> warn -> enforce; exceptions are always time-boxed.
+version: 1
+mode: warn
+controls:
+  CDX-002: enforce   # review routing is a hard requirement for this repo
+  CDX-011: enforce   # workflow actions must be pinned to commit SHAs
+  CDX-012: enforce   # workflows must declare permissions
+  CDX-061: enforce   # the project must have tests

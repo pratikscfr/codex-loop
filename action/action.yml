@@ -1,0 +1,33 @@
+name: codex-loop
+description: Check a repository against engineering standards, annotate pull requests, and keep agent context (AGENTS.md) in sync.
+author: codex-loop
+branding:
+  icon: shield
+  color: orange
+
+inputs:
+  path:
+    description: Directory to check, relative to the workspace.
+    default: "."
+  fail-on:
+    description: "Which live failures fail the job: enforce (default), warn, or never."
+    default: enforce
+  comment:
+    description: Post or update a single summary comment on pull requests (needs pull-requests write permission).
+    default: "false"
+  check-context:
+    description: Also fail if the generated AGENTS.md block is out of date.
+    default: "false"
+  github-token:
+    description: Token used only to post the pull request comment.
+    default: ${{ github.token }}
+
+outputs:
+  failing:
+    description: Number of live failures that counted against fail-on.
+  report-json:
+    description: Path to the JSON report written in the runner temp directory.
+
+runs:
+  using: node24
+  main: dist/index.js

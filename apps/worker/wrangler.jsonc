@@ -1,0 +1,47 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "codex-loop",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-11",
+  // workflows_preserve_non_retryable_error_message: the default since 2026-05-14; listed explicitly so
+  // local `wrangler dev` also reports the real error (used to map GitHub failures to friendly messages).
+  "compatibility_flags": ["nodejs_compat", "workflows_preserve_non_retryable_error_message"],
+  "observability": { "enabled": true },
+
+  // Workers AI: advisory summary + repo chat. Needs a Cloudflare account (no API key to manage).
+  "ai": { "binding": "AI" },
+
+  // Static UI (plain HTML/JS/CSS, no build step). Only API-ish paths run the Worker first;
+  // everything else is served straight from the assets binding (headers come from public/_headers).
+  "assets": {
+    "directory": "./public",
+    "run_worker_first": ["/api/*", "/mcp", "/mcp/*", "/healthz"]
+  },
+
+  "durable_objects": {
+    "bindings": [
+      // One per lowercase "owner/repo": stored report, history, chat memory, daily refresh schedule.
+      { "name": "RepoAgent", "class_name": "RepoAgent" },
+      // Remote MCP server sessions (Streamable HTTP at /mcp).
+      { "name": "MCP_OBJECT", "class_name": "CodexLoopMcp" },
+      // Hourly sliding-window rate limiter (one instance per hashed client IP + one global).
+      { "name": "RATE_LIMITER", "class_name": "RateLimiter" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RepoAgent", "CodexLoopMcp", "RateLimiter"] }
+  ],
+
+  "workflows": [
+    { "name": "codex-loop-analyze", "binding": "ANALYZE_WORKFLOW", "class_name": "AnalyzeRepoWorkflow" }
+  ],
+
+  "vars": {
+    // Workers AI text model used for the advisory and the chat. Must support tool calling for chat.
+    "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+  }
+  // Optional vars: MAX_FILE_READS (cap files read per analysis), MCP_ALLOWED_ORIGINS (comma-separated
+  // browser origins allowed to call /mcp; default none, so no CORS headers are sent).
+  // Optional secret (unauthenticated GitHub works at a low rate limit):
+  //   npx wrangler secret put GITHUB_TOKEN   (fine-grained token, public repositories, read-only)
+}

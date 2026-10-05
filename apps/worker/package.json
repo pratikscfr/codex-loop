@@ -1,0 +1,27 @@
+{
+  "name": "@codex-loop/worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker: hosted codex-loop analyzer, per-repo agent, workflow, chat and MCP server.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "dry-run": "wrangler deploy --dry-run --outdir .wrangler/dryrun",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@codex-loop/core": "*",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "agents": "^0.17.4",
+    "ai": "^6.0.300",
+    "workers-ai-provider": "^3.3.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261005.1",
+    "wrangler": "^4.147.0"
+  }
+}

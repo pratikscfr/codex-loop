@@ -1,0 +1,18 @@
+{
+  "name": "@codex-loop/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "codex-loop command line: check a repo, generate agent context.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "codex-loop": "./dist/cli.js"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@codex-loop/core": "*"
+  }
+}

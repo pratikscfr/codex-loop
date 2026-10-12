@@ -16,7 +16,7 @@
     "@codex-loop/core": "*",
     "@modelcontextprotocol/sdk": "1.29.0",
     "agents": "^0.17.4",
-    "ai": "^6.0.300",
+    "ai": "^7.0.136",
     "workers-ai-provider": "^3.3.1",
     "zod": "^4.6.5"
   },
